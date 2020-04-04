@@ -8,7 +8,7 @@ if (!port) {
   process.exit(1)
 }
 
-var server = http.createServer(function(request, response) {
+var server = http.createServer(function (request, response) {
   var parsedUrl = url.parse(request.url, true)
   var pathWithQuery = request.url
   var queryString = ""
@@ -21,30 +21,31 @@ var server = http.createServer(function(request, response) {
 
   console.log("有人发送请求过来了，路径(带查询参数) 为: " + pathWithQuery)
 
-  if (path === "/") {
-    response.statusCode = 200
-    response.setHeader("Content-Type", "text/html;charset=utf-8")
-    response.write(`
-        <!DOCTYPE html>
-        <head>
-            <link rel="stylesheet" href="/x">
-        </head>
-        <body>
-            <h1>哈哈哈</h1> 
-        </body>
-    `)
-    response.end()
-  } else if (path === "/x") {
-    response.statusCode = 200
-    response.setHeader("Content-Type", "text/css;charset=utf-8")
-    response.write(`body{color: red;}\n`)
-    response.end()
-  } else {
-    response.statusCode = 404
-    response.setHeader("Content-Type", "text/html;charset=utf-8")
-    response.write(`[你访问的页面不存在]\n`)
-    response.end()
+  response.statusCode = 200
+  const filePath = path === "/" ? "/index.html" : path
+  const index = filePath.lastIndexOf(".")
+  const fileExtension = filePath.substring(index)
+  const fileTypes = {
+    ".html": "text/html",
+    ".css": "text/css",
+    ".js": "text/javascript",
+    ".png": "image/png",
+    ".jpg": "image/jpeg",
   }
+  response.setHeader(
+    "Content-Type",
+    `${fileTypes[fileExtension] || "text/html"};charset=utf-8`
+  )
+
+  let content
+  try {
+    content = fs.readFileSync(`./public${filePath}`)
+  } catch (error) {
+    content = "no such file"
+    response.statusCode = 404
+  }
+  response.write(content)
+  response.end()
 })
 
 server.listen(port)
